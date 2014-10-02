@@ -1,15 +1,16 @@
-SOURCES=ssltrace.cpp openssl.cpp nss.cpp gnutls.cpp symbols.cpp
-HEADERS=ssltrace.h nssimpl.h nsstypes.h gnutlstypes.h symbols.h
-OBJECTS=$(SOURCES:.cpp=.o)
+SOURCES=ssltrace.c openssl.c nss.c gnutls.c
+HEADERS=ssltrace.h nssimpl.h
+OBJECTS=$(SOURCES:.c=.o)
 OUTPUT=ssltrace.so
+CFLAGS=-g -fvisibility=hidden -fPIC -Wall -D_GNU_SOURCE -I/usr/include/nspr
 
 all: $(SOURCES) $(HEADERS) $(OUTPUT) Makefile
 	
 $(OUTPUT): $(OBJECTS)
-	g++ -g -shared -Wall $(OBJECTS) -o $@ -ldl -ldw
+	$(CC) -shared $(CFLAGS) $(OBJECTS) -o $@ -ldl
 
-.cpp.o:
-	g++ -g -fPIC -std=gnu++11 -Wall -D_GNU_SOURCE -I/usr/include/nspr -I/usr/include/elfutils -c $< -o $@
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(OBJECTS) $(OUTPUT)

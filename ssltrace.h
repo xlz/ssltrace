@@ -20,29 +20,24 @@
 #ifndef SSLTRACE_H
 #define SSLTRACE_H
 
+#include <stdint.h>
+
 #define SSLTRACE "ssltrace"
-#define SSLTRACE_LOG "SSLTRACE_LOG"
-#define SSLTRACE_CONF_D "/etc/ssltrace.d/"
+#define SSLTRACE_PCAP "SSLTRACE_PCAP"
 
 #define WRAP(type,name,list) \
 	static type (*_##name)list = NULL; \
-	extern "C" type name list
+	type name list __attribute__ ((visibility ("default"))); \
+	type name list
 
 #define WRAPINIT(name) \
-	if (!_##name) _##name=(decltype(_##name))ssltrace_dlsym(#name); \
+	if (!_##name) _##name = (void *)ssltrace_dlsym(#name); \
 	if (!_##name) \
-	{ \
 		ssltrace_die("Unable to resolve symbol " #name); \
-	}
-
-#define WRAPINIT_FN(name,fn) \
-	WRAPINIT(name); \
-	fn((void*)_##name);
 
 void *ssltrace_dlsym(const char *symbol);
 void ssltrace_die(const char* message);
 void ssltrace_debug(const char* fmt, ...);
-void ssltrace_trace_sessionid(unsigned char* sessionid, unsigned int sessionid_length, unsigned char* masterkey, unsigned int masterkey_length);
-void ssltrace_trace_clientrandom(unsigned char* clientrandom, unsigned int clientrandom_length, unsigned char* masterkey, unsigned int masterkey_length);
+void ssltrace_capture_payload(int read, uint64_t entropy[2], const char *buf, unsigned long len);
 
-#endif // SSLTRACE_H
+#endif

@@ -1,17 +1,7 @@
-* Only works on dynamically linked SSL libraries
+* Only works on dynamically linked SSL libraries / NSS that links to NSPR
 * SSLv2 probably doesn't work, and it might SEGFAULT
 
 OpenSSL
 -------
 
   * Does not work with custom SSL_METHOD
-
-NSS
----
-
-  * Memory leak when traced program uses SSL_HandshakeCallback
-
-GnuTLS
-------
-
-No known issues.

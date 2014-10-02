@@ -20,32 +20,35 @@
 #ifndef NSSIMPL_H
 #define NSSIMPL_H
 
-// Adapted from sslimpl.h
-#define ssl_HaveXmitBufLock(ss)		\
-    (PZ_InMonitor((ss)->M(xmitBufLock)))
-#define ssl_HaveRecvBufLock(ss)		\
-    (PZ_InMonitor((ss)->M(recvBufLock)))
+#include <nss/seccomon.h> /* SECItem */
+#include <nspr/prio.h> /* PRFileDesc */
 
-#define ssl_GetSpecReadLock(ss)		\
-    { if (!ss->M(opt).M(noLocks)) NSSRWLock_LockRead((ss)->M(specLock)); }
-#define ssl_ReleaseSpecReadLock(ss)	\
-    { if (!ss->M(opt).M(noLocks)) NSSRWLock_UnlockRead((ss)->M(specLock)); }
+typedef struct {
+	void *connect;
+	void *accept;
+	void *bind;
+	void *listen;
+	void *shutdown;
+	void *close;
+	int (*recv)(void *, unsigned char *, int, int);
+	int (*send)(void *, const unsigned char *, int, int);
+	int (*read)(void *, unsigned char *, int);
+	int (*write)(void *, const unsigned char *, int);
+	void *getpeername;
+	void *getsockname;
+} sslSocketOps;
 
-#define ssl_Get1stHandshakeLock(ss)     \
-    { if (!ss->M(opt).M(noLocks)) { \
-	  PORT_Assert(PZ_InMonitor((ss)->M(firstHandshakeLock)) || \
-		      !ssl_HaveRecvBufLock(ss)); \
-	  PZ_EnterMonitor((ss)->M(firstHandshakeLock)); \
-      } }
-#define ssl_Release1stHandshakeLock(ss) \
-    { if (!ss->M(opt).M(noLocks)) PZ_ExitMonitor((ss)->M(firstHandshakeLock)); }
+typedef struct {
+	SECItem nextProtoNego;
+	unsigned int useSecurity:1;
+	unsigned int :28;
+} sslOptions;
 
-#define ssl_GetSSL3HandshakeLock(ss)	\
-    { if (!ss->M(opt).M(noLocks)) { \
-	  PORT_Assert(!ssl_HaveXmitBufLock(ss)); \
-	  PZ_EnterMonitor((ss)->M(ssl3HandshakeLock)); \
-      } }
-#define ssl_ReleaseSSL3HandshakeLock(ss) \
-    { if (!ss->M(opt).M(noLocks)) PZ_ExitMonitor((ss)->M(ssl3HandshakeLock)); }
+typedef struct {
+	PRFileDesc *fd;
+	const sslSocketOps *ops;
+	sslOptions opt;
+	char dont_access_beyond_this[];
+} sslSocket;
 
 #endif // NSSIMPL_H
